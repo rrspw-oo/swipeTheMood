@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read and write their own user profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Quotes collection rules
+    match /quotes/{quoteId} {
+      // Allow list (query) operations for everyone
+      // This is needed for getDocs() to work
+      allow list: if true;
+
+      // For get (single document read), apply restrictions
+      allow get: if resource.data.isPublic == true
+        || resource.data.userId == 'system'
+        || (request.auth != null && resource.data.userId == request.auth.uid);
+
+      // Only authenticated users can create quotes
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId
+        && request.resource.data.keys().hasAll(['text', 'moods', 'userId', 'isPublic', 'createdAt'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 500
+        && request.resource.data.author is string
+        && request.resource.data.author.size() <= 100
+        && request.resource.data.moods is list
+        && request.resource.data.userId is string
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.isPublic is bool
+        && request.resource.data.createdAt is timestamp
+        && (!request.resource.data.keys().hasAny(['type']) || request.resource.data.type in ['quote', 'vitality', 'paradigm'])
+        && (request.resource.data.type != 'paradigm' || (
+          request.resource.data.keys().hasAll(['theory', 'foundations'])
+          && request.resource.data.theory is string
+          && request.resource.data.theory.size() > 0
+          && request.resource.data.foundations is list
+          && request.resource.data.foundations.size() > 0
+        ))
+        && (request.resource.data.type == 'paradigm' || request.resource.data.moods.size() > 0);
+
+      // Users can only update their own quotes
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.userId
+        && request.auth.uid == request.resource.data.userId;
+
+      // Users can only delete their own quotes
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

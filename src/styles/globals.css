@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Default theme colors */
+    --color-primary-background: #f8fafc;
+    --color-primary-button: #f1f5f9;
+    --color-primary-surface: #e2e8f0;
+    --color-primary-text: #cbd5e1;
+    --color-secondary-tag: #F7AAD6;
+    --color-secondary-tag-light: #FFC0E6;
+    --color-secondary-tag-lighter: #FFD6EF;
+    --color-author-background: #F1F1F1;
+    --color-author-text: #BABCBD;
+    --color-author-border: transparent;
+    --color-author-hover-background: #e5e5e5;
+    --color-author-hover-border: transparent;
+    --color-card-background: #f8f8f8;
+    --color-card-border: #e2e8f0;
+    --color-mood-background: #F7AAD6;
+    --color-mood-text: #ffffff;
+    --color-mood-hover-background: #f472b6;
+    --color-tab-active-background: #F7AAD6;
+    --color-tab-active-text: #ffffff;
+    --color-tab-inactive-background: transparent;
+    --color-tab-inactive-text: #6b7280;
+    --color-other-border: #f8f8f8;
+    --color-other-lining: #f0f0f0;
+    --color-other-disabled: #e8e8e8;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--color-primary-background);
+    color: theme('colors.gray.800');
+    line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  body.theme-inverted {
+    color: theme('colors.gray.100');
+  }
+
+  /* Safe area support for mobile devices */
+  .pt-safe-area-inset-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pb-safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@layer components {
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: theme('colors.background.secondary');
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: theme('colors.border.medium');
+    border-radius: 2px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: theme('colors.primary.500');
+  }
+}
+
+@layer utilities {
+  /* Touch-friendly tap targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Mobile touch optimizations - prevent vertical scrolling during swipe */
+  .swipe-container {
+    touch-action: pan-x;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    overflow: hidden;
+  }
+
+  /* Prevent page scrolling on mobile */
+  .no-scroll {
+    overflow: hidden;
+    height: 100vh;
+    touch-action: pan-x;
+  }
+
+  /* Smooth transitions */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Glass effect */
+  .glass {
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, theme('colors.primary.500'), theme('colors.secondary.400'));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

@@ -1,30 +1,29 @@
-# QuoteSwipe 文檔索引
+# QuoteSwipe 
 
-本資料夾包含專案的完整技術文檔。
 
-## 文檔結構
+## 結構
 
 ### 快速開始
-- [`../QUICK_START.md`](../QUICK_START.md) - 新專案設定快速指南
-- [`../FIREBASE_SETUP.md`](../FIREBASE_SETUP.md) - Firebase 完整設定指南
+- [`../QUICK_START.md`](../QUICK_START.md) 
+- [`../FIREBASE_SETUP.md`](../FIREBASE_SETUP.md) 
 
 ### 開發指南
-- [`development-process.md`](development-process.md) - 開發流程和編碼規範
-- [`../CLAUDE.md`](../CLAUDE.md) - AI 程式碼撰寫規範
+- [`development-process.md`](development-process.md) 
+- [`../CLAUDE.md`](../CLAUDE.md) 
 
 ### 技術文檔
-- [`frontend/`](frontend/) - 前端架構和元件文檔
+- [`frontend/`](frontend/) - 前端架構和元件
   - `components.md` - React 元件說明
   - `styles.md` - 樣式系統和設計規範
   - `types.md` - TypeScript 型別定義
   - `services.md` - Firebase 服務層說明
-- [`backend/`](backend/) - 後端和資料庫文檔
+- [`backend/`](backend/) - 後端和資料庫
 
 ### 故障排除
-- [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) - 常見問題診斷和解決方案
+- [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) 
 
 ### 變更記錄
-- [`../CHANGELOG.md`](../CHANGELOG.md) - 專案變更歷史
+- [`../CHANGELOG.md`](../CHANGELOG.md) 
 
 ---
 
@@ -50,7 +49,7 @@ firebase deploy --only hosting
 1. **QUICK_START.md** - 了解基本設定流程
 2. **CLAUDE.md** - 遵循 AI 編碼規範
 3. **development-process.md** - 理解開發工作流程
-4. **相關功能文檔** - 在 `frontend/` 或 `backend/` 找到對應文檔
+4. **相關功能文檔** - 在 `frontend/` 或 `backend/` 找到對應文件
 
 ---
 
@@ -62,6 +61,4 @@ firebase deploy --only hosting
 4. 更新文檔記錄新問題和解決方案
 
 ---
-
-**維護者：** 開發團隊  
 **最後更新：** 2025-10-20

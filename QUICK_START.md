@@ -76,7 +76,7 @@ await import('./src/utils/seedData').then(m => m.initializeDatabase())
 
 ---
 
-## 重要文檔
+## 重要文件
 
 - `FIREBASE_SETUP.md` - 完整 Firebase 設定指南
 - `docs/TROUBLESHOOTING.md` - 故障排除指南
@@ -116,11 +116,11 @@ firebase deploy
    - 即使在本地開發也需要
    - 這不是可選步驟
 
-2. **修改程式碼前先讀文檔**
-   - 檢查 `docs/` 資料夾的相關文檔
+2. **修改程式碼前先讀文件**
+   - 檢查 `docs/` 資料夾的相關文件
    - 參考 `CLAUDE.md` 的開發規範
 
-3. **同步更新文檔**
+3. **同步更新文件**
    - 修改功能時更新對應的 .md 檔案
    - 更新 `CHANGELOG.md`
 

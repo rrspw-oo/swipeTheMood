@@ -23,15 +23,15 @@ firebase deploy --only hosting
 - 清理 `src/contexts/AuthContext.tsx` 的 redirect 處理邏輯
 - 移除未使用的 import (`useRef`)
 
-### 文檔更新
-**新增文檔：**
+### 文件更新
+**新增文件：**
 - `docs/TROUBLESHOOTING.md` - 完整的故障排除指南
   - Google 登入問題診斷
   - Firestore 連接問題
   - 環境變數問題
   - 歷史事件記錄
 
-**更新文檔：**
+**更新文件：**
 - `FIREBASE_SETUP.md`
   - 新增 Step 7: Deploy Firebase Hosting (標註為 CRITICAL)
   - 詳細說明為何 Hosting 部署是必要的
@@ -52,8 +52,8 @@ firebase deploy --only hosting
 
 ### 預防措施
 1. Firebase Hosting 部署現已標註為 CRITICAL 步驟
-2. 在所有相關文檔中明確說明其必要性
-3. 建立完整的故障排除文檔避免類似問題
+2. 在所有相關文件中明確說明其必要性
+3. 建立完整的故障排除文件避免類似問題
 4. 記錄事件時間線供未來參考
 
 ### 教訓
@@ -77,7 +77,7 @@ firebase deploy --only hosting
 ### 部署資訊
 - 成功建構生產版本
 - 部署至 Firebase Hosting: https://quote-swipe.web.app
-- Firebase 專案：quote-swipe (wpsrrr@gmail.com)
+- Firebase 專案：quote-swipe
 - 建構時間：4.33s
 - Bundle 大小：915.50 KiB
 
@@ -130,7 +130,7 @@ firebase deploy --only hosting
 ### 部署資訊
 - 成功建構生產版本
 - 部署至 Firebase Hosting: https://quote-swipe.web.app
-- Firebase 專案：quote-swipe (wpsrrr@gmail.com)
+- Firebase 專案：quote-swipe
 - 建構時間：4.61s
 - Bundle 大小：915.40 KiB
 - 21 個檔案成功上傳
@@ -173,7 +173,7 @@ firebase deploy --only hosting
 ### 部署資訊
 - 成功建構生產版本
 - 部署至 Firebase Hosting: https://quote-swipe.web.app
-- Firebase 專案：quote-swipe (wpsrrr@gmail.com)
+- Firebase 專案：quote-swipe
 - 建構時間：4.42s
 - Bundle 大小：911.29 KiB
 - 21 個檔案成功上傳
@@ -218,7 +218,7 @@ firebase deploy --only hosting
 ### 部署資訊
 - 成功建構生產版本
 - 部署至 Firebase Hosting: https://quote-swipe.web.app
-- Firebase 專案：quote-swipe (wpsrrr@gmail.com)
+- Firebase 專案：quote-swipe
 - 建構時間：4.27s
 - Bundle 大小：911.11 KiB
 - 同時部署 Firestore Rules 和 Hosting
@@ -245,7 +245,7 @@ firebase deploy --only hosting
 ### 部署資訊
 - 成功建構生產版本
 - 部署至 Firebase Hosting: https://quote-swipe.web.app
-- Firebase 專案：quote-swipe (wpsrrr@gmail.com)
+- Firebase 專案：quote-swipe
 - 建構時間：4.15s
 - Bundle 大小：888.42 KiB
 
@@ -299,7 +299,7 @@ firebase deploy --only hosting
 ### 部署資訊
 - 成功建構生產版本
 - 部署至 Firebase Hosting: https://quote-swipe.web.app
-- Firebase 專案：quote-swipe (wpsrrr@gmail.com)
+- Firebase 專案：quote-swipe
 - 建構時間：4.11s
 - Bundle 大小：888.40 KiB
 
@@ -353,7 +353,7 @@ firebase deploy --only hosting
 - 成功建構生產版本
 - 同時部署 Hosting 和 Firestore Rules
 - 部署至 Firebase Hosting: https://quote-swipe.web.app
-- Firebase 專案：quote-swipe (wpsrrr@gmail.com)
+- Firebase 專案：quote-swipe
 - 建構時間：4.25s
 - Bundle 大小：886.94 KiB
 
@@ -392,7 +392,7 @@ firebase deploy --only hosting
 ### 部署資訊
 - 成功建構生產版本
 - 部署至 Firebase Hosting: https://quote-swipe.web.app
-- Firebase 專案：quote-swipe (wpsrrr@gmail.com)
+- Firebase 專案：quote-swipe
 - 建構時間：4.33s
 - Bundle 大小：883.31 KiB
 
@@ -437,7 +437,7 @@ src/
 - 功能元件：`../../../types`, `../../../services/firebase/api`
 - 共用元件：`../../types`, `../[Component]`
 
-### 文檔更新
+### 文件更新
 - 完整重寫 `docs/frontend/components.md` 反映新架構
 - 完整重寫 `docs/frontend/services.md` 包含服務層說明
 - 新增 import 路徑規範和最佳實踐
@@ -447,7 +447,7 @@ src/
 - 成功建構生產版本（無 TypeScript 錯誤）
 - 修正 `index.html` 的 main.tsx 路徑
 - 部署至 Firebase Hosting: https://quote-swipe.web.app
-- Firebase 專案：quote-swipe (wpsrrr@gmail.com)
+- Firebase 專案：quote-swipe
 
 ### 技術改進
 - 所有功能正常運作（Random/Mood/Vitality/Paradigm 模式）
@@ -484,7 +484,7 @@ src/
 
 ### 載入性能優化
 - 移除 `firebaseApi.ts` 中所有人工延遲（500ms, 300ms）
-- 當 Firestore 不可用時立即回退到本地數據
+- 當 Firestore 不可用時立即回退到本地資料
 - 大幅提升應用載入速度和響應性
 - 優化用戶體驗減少等待時間
 
@@ -504,20 +504,20 @@ src/
 
 ---
 
-## 2024/09/24 - 專案文檔化與開發流程建立
+## 2024/09/24 - 專案文件化與開發流程建立
 
-### 新增文檔結構
+### 新增文件結構
 - 建立完整的 `docs/` 資料夾結構
-- 新增前端文檔：`components.md`, `styles.md`, `types.md`, `services.md`
-- 新增後端文檔：`api.md`, `database.md`, `firebase.md`
-- 新增開發流程文檔：`development-process.md`, `deployment.md`
+- 新增前端文件：`components.md`, `styles.md`, `types.md`, `services.md`
+- 新增後端文件：`api.md`, `database.md`, `firebase.md`
+- 新增開發流程文件：`development-process.md`, `deployment.md`
 - 建立 `backend/` 資料夾準備未來擴展
 
 ### 更新開發規範
 - 在 CLAUDE.md 中新增強制性開發流程
-- 要求修改前必須閱讀相關文檔
+- 要求修改前必須閱讀相關文件
 - 建立「不要改一個功能壞掉一個功能」的測試原則
-- 要求同步更新程式碼和文檔
+- 要求同步更新程式碼和文件
 
 ### 建立變更記錄系統
 - 新增 CHANGELOG.md 追蹤所有專案變更

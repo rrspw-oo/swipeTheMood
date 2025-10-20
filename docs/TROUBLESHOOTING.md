@@ -267,7 +267,7 @@ Firebase Authentication 的 OAuth 流程依賴 Hosting 上的 `/__/auth/handler`
 **教訓:**
 1. Firebase Hosting 部署是 Google Auth 的**前置條件**，不是可選步驟
 2. 即使在本地開發，也必須先部署 Hosting 才能測試登入
-3. 應在設定文檔中明確標註為 CRITICAL 步驟
+3. 應在設定文件中明確標註為 CRITICAL 步驟
 
 **預防措施:**
 1. 更新 FIREBASE_SETUP.md，新增 Step 7 並標註為 CRITICAL
@@ -331,7 +331,7 @@ firebase hosting:channel:list
 2. 記錄重現步驟
 3. 記錄診斷過程和嘗試的解決方案
 4. 更新本文件，加入新的問題和解決方案
-5. 更新相關技術文檔
+5. 更新相關技術文件
 
 ---
 

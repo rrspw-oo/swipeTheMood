@@ -30,9 +30,12 @@ dist-ssr
 .env.test.local
 .env.production.local
 
-# Firebase service account keys (never commit these!)
+# Firebase service account keys and sensitive auth files (never commit these!)
 *service-account*.json
 firebase-service-account.json
+temp_auth.json
+*auth*.json
+firebase-debug.log
 
 # PWA files
 sw.js

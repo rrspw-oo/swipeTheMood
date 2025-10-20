@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Quote, CreateQuoteData, MoodType } from '../../../types';
 import { getAllAuthors, getAllTags } from '../../../services/firebase/api';
@@ -346,13 +347,41 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
   const displayedAuthors = authors.slice(0, displayLimit);
   const displayedTags = tags.slice(0, displayLimit);
 
-  return (
+  // 禁用背景滾動
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+
+      // 滾動到頂部並固定 body
+      window.scrollTo(0, 0);
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = '0';
+      document.body.style.left = '0';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+
+      return () => {
+        // 恢復滾動
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
+        window.scrollTo(scrollX, scrollY);
+      };
+    }
+  }, [isOpen]);
+
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black bg-opacity-50 z-[9999]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -363,7 +392,7 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
           <motion.div
             className="
               fixed bottom-0 left-0 right-0 bg-background-primary rounded-t-3xl
-              shadow-2xl z-50 max-h-[90vh] overflow-y-auto custom-scrollbar
+              shadow-2xl z-[10000] max-h-[90vh] overflow-y-auto custom-scrollbar
             "
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -806,6 +835,8 @@ const AddQuoteModal: React.FC<AddQuoteModalProps> = ({ isOpen, onClose, onSave, 
       )}
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default AddQuoteModal;

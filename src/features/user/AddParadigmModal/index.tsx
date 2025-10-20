@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CreateParadigmData, Foundation, Quote } from '../../../types';
+import { getAllTags } from '../../../services/firebase/api';
+import { trackTagUsage } from '../../../utils/recentUsageTracker';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface AddParadigmModalProps {
   isOpen: boolean;
@@ -10,33 +14,92 @@ interface AddParadigmModalProps {
 }
 
 const AddParadigmModal: React.FC<AddParadigmModalProps> = ({ isOpen, onClose, onSave, editingQuote }) => {
+  const { user } = useAuth();
   const [theory, setTheory] = useState('');
+  const [description, setDescription] = useState('');
   const [foundations, setFoundations] = useState<Foundation[]>([]);
   const [isPublic, setIsPublic] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedFoundations, setExpandedFoundations] = useState<Set<string>>(new Set());
 
+  // Tags system
+  const [tags, setTags] = useState<string[]>([]); // All available tags
+  const [selectedTags, setSelectedTags] = useState<string[]>([]); // Quick select tags
+  const [customTags, setCustomTags] = useState<string[]>([]); // Manually input tags
+  const [tagInput, setTagInput] = useState('');
+
+  // Responsive tag display
+  const [displayLimit, setDisplayLimit] = useState(11);
+
+  // Load tags when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const loadTags = async () => {
+        try {
+          const tagsList = await getAllTags(user?.uid);
+          console.log('Loaded tags:', tagsList);
+          setTags(tagsList);
+        } catch (error) {
+          console.error('Error loading tags:', error);
+        }
+      };
+      loadTags();
+    }
+  }, [isOpen, user?.uid]);
+
+  // Responsive tag display limit
+  useEffect(() => {
+    const updateLimit = () => {
+      if (window.innerWidth < 768) {
+        setDisplayLimit(5); // Mobile
+      } else if (window.innerWidth < 1024) {
+        setDisplayLimit(7); // Tablet
+      } else {
+        setDisplayLimit(11); // Desktop
+      }
+    };
+
+    updateLimit();
+    window.addEventListener('resize', updateLimit);
+    return () => window.removeEventListener('resize', updateLimit);
+  }, []);
+
+  // Initialize form with editing quote data
   useEffect(() => {
     if (isOpen) {
       if (editingQuote && editingQuote.type === 'paradigm') {
         // Load existing paradigm data for editing
         setTheory(editingQuote.theory || '');
+        setDescription(editingQuote.foundations?.[0]?.description || '');
         setFoundations(editingQuote.foundations || []);
         setIsPublic(editingQuote.isPublic || false);
+
+        // Separate tags into selectedTags and customTags
+        const quoteTags = editingQuote.moods || [];
+        // Assume tags that exist in the tags list are from Quick select
+        const selected = quoteTags.filter(tag => tags.includes(tag));
+        const custom = quoteTags.filter(tag => !tags.includes(tag));
+        setSelectedTags(selected);
+        setCustomTags(custom);
+
         // Expand all foundations when editing
         const allIds = new Set((editingQuote.foundations || []).map(f => f.id));
         setExpandedFoundations(allIds);
       } else {
         // Reset form for new paradigm
         setTheory('');
+        setDescription('');
         setFoundations([]);
         setIsPublic(false);
+        setSelectedTags([]);
+        setCustomTags([]);
         setExpandedFoundations(new Set());
       }
       setErrors([]);
+      setTagInput('');
     }
-  }, [isOpen, editingQuote]);
+  }, [isOpen, editingQuote, tags]);
 
   const handleAddFoundation = () => {
     const newFoundation: Foundation = {
@@ -92,6 +155,34 @@ const AddParadigmModal: React.FC<AddParadigmModalProps> = ({ isOpen, onClose, on
     ));
   };
 
+  // Tags handling functions
+  const handleTagClick = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      // Remove from selected
+      setSelectedTags(selectedTags.filter(t => t !== tag));
+    } else {
+      // Add to selected
+      setSelectedTags([...selectedTags, tag]);
+      trackTagUsage(tag);
+    }
+  };
+
+  const handleTagInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault();
+      const newTag = tagInput.trim();
+      if (!customTags.includes(newTag) && !selectedTags.includes(newTag)) {
+        setCustomTags([...customTags, newTag]);
+        trackTagUsage(newTag);
+      }
+      setTagInput('');
+    }
+  };
+
+  const handleRemoveCustomTag = (tag: string) => {
+    setCustomTags(customTags.filter(t => t !== tag));
+  };
+
   const toggleFoundation = (id: string) => {
     setExpandedFoundations(prev => {
       const newSet = new Set(prev);
@@ -120,14 +211,8 @@ const AddParadigmModal: React.FC<AddParadigmModalProps> = ({ isOpen, onClose, on
     }
 
     foundations.forEach((f, index) => {
-      if (!f.code.trim()) {
-        validationErrors.push(`Foundation ${index + 1}: Code cannot be empty`);
-      }
       if (!f.title.trim()) {
         validationErrors.push(`Foundation ${index + 1}: Title cannot be empty`);
-      }
-      if (!f.description.trim()) {
-        validationErrors.push(`Foundation ${index + 1}: Description cannot be empty`);
       }
     });
 
@@ -145,9 +230,28 @@ const AddParadigmModal: React.FC<AddParadigmModalProps> = ({ isOpen, onClose, on
     setErrors([]);
 
     try {
+      // Auto-generate code based on index and update first foundation's description
+      const updatedFoundations = foundations.map((f, index) => ({
+        ...f,
+        code: (index + 1).toString(),
+        description: index === 0 ? description : ''
+      }));
+
+      // Combine selectedTags and customTags for moods
+      const allTags = [...selectedTags, ...customTags];
+
+      // Track all tags
+      allTags.forEach(tag => {
+        if (tag && tag.trim()) {
+          trackTagUsage(tag.trim());
+        }
+      });
+
       await onSave({
         theory,
-        foundations,
+        description,
+        moods: allTags,
+        foundations: updatedFoundations,
         isPublic,
         type: 'paradigm'
       });
@@ -174,13 +278,41 @@ const AddParadigmModal: React.FC<AddParadigmModalProps> = ({ isOpen, onClose, on
     }
   };
 
-  return (
+  // 禁用背景滾動
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+
+      // 滾動到頂部並固定 body
+      window.scrollTo(0, 0);
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = '0';
+      document.body.style.left = '0';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+
+      return () => {
+        // 恢復滾動
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
+        window.scrollTo(scrollX, scrollY);
+      };
+    }
+  }, [isOpen]);
+
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black bg-opacity-50 z-[9999]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -191,7 +323,7 @@ const AddParadigmModal: React.FC<AddParadigmModalProps> = ({ isOpen, onClose, on
           <motion.div
             className="
               fixed bottom-0 left-0 right-0 bg-background-primary rounded-t-3xl
-              shadow-2xl z-50 max-h-[90vh] overflow-y-auto custom-scrollbar
+              shadow-2xl z-[10000] max-h-[90vh] overflow-y-auto custom-scrollbar
             "
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -245,6 +377,107 @@ const AddParadigmModal: React.FC<AddParadigmModalProps> = ({ isOpen, onClose, on
                 />
                 <div className="text-xs text-border-medium mt-1 text-right">
                   {theory.length}/200 characters
+                </div>
+              </div>
+
+              {/* Description Input */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  className="
+                    w-full px-4 py-3 border border-border-light rounded-xl
+                    focus:outline-none focus:ring-2 focus:ring-[#B8A9D4]
+                    focus:border-transparent resize-none
+                  "
+                  rows={3}
+                  placeholder="Enter theory description..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+                <div className="text-xs text-border-medium mt-1">
+                  This will appear below the theory name on the card
+                </div>
+              </div>
+
+              {/* Tags Input */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Tags
+                </label>
+                <div>
+                  {/* Tag Input */}
+                  <div className="relative mb-3">
+                    <input
+                      type="text"
+                      className="
+                        w-full px-4 py-3 border border-border-light rounded-xl
+                        focus:outline-none focus:ring-2 focus:ring-[#B8A9D4]
+                        focus:border-transparent text-gray-700
+                      "
+                      placeholder="Type a tag and press Enter..."
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyPress={handleTagInputKeyPress}
+                    />
+                  </div>
+
+                  {/* Tag Quick Select */}
+                  {tags.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs text-border-medium mb-2">Quick select:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {tags.slice(0, displayLimit).map((tag) => (
+                          <motion.button
+                            key={tag}
+                            type="button"
+                            className={`
+                              px-3 py-1.5 rounded-full text-xs font-medium
+                              transition-all border
+                              ${selectedTags.includes(tag)
+                                ? 'bg-[#B8A9D4] text-white border-[#B8A9D4]'
+                                : 'bg-background-card text-gray-600 border-border-light hover:border-[#B8A9D4] hover:bg-purple-50'
+                              }
+                            `}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleTagClick(tag)}
+                          >
+                            {tag}
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Display Custom Tags Only */}
+                  {customTags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {customTags.map((tag, index) => (
+                        <motion.div
+                          key={index}
+                          className="
+                            px-3 py-1.5 rounded-full text-xs font-medium
+                            bg-[#B8A9D4] text-white border border-[#B8A9D4]
+                            flex items-center gap-2
+                          "
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.8, opacity: 0 }}
+                        >
+                          <span>{tag}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCustomTag(tag)}
+                            className="hover:text-red-200 transition-colors"
+                          >
+                            ×
+                          </button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -314,23 +547,6 @@ const AddParadigmModal: React.FC<AddParadigmModalProps> = ({ isOpen, onClose, on
                               exit={{ height: 0, opacity: 0 }}
                               className="space-y-3"
                             >
-                              {/* Code */}
-                              <div>
-                                <label className="block text-xs text-gray-600 mb-1">
-                                  Code (e.g., 1-1, 1-2)
-                                </label>
-                                <input
-                                  type="text"
-                                  className="
-                                    w-full px-3 py-2 border border-border-light rounded-lg text-sm
-                                    focus:outline-none focus:ring-2 focus:ring-[#B8A9D4]
-                                  "
-                                  placeholder="1-1"
-                                  value={foundation.code}
-                                  onChange={(e) => handleUpdateFoundation(foundation.id, 'code', e.target.value)}
-                                />
-                              </div>
-
                               {/* Title */}
                               <div>
                                 <label className="block text-xs text-gray-600 mb-1">
@@ -345,24 +561,6 @@ const AddParadigmModal: React.FC<AddParadigmModalProps> = ({ isOpen, onClose, on
                                   placeholder="Foundation title"
                                   value={foundation.title}
                                   onChange={(e) => handleUpdateFoundation(foundation.id, 'title', e.target.value)}
-                                />
-                              </div>
-
-                              {/* Description */}
-                              <div>
-                                <label className="block text-xs text-gray-600 mb-1">
-                                  Description
-                                </label>
-                                <textarea
-                                  className="
-                                    w-full px-3 py-2 border border-border-light rounded-lg text-sm
-                                    focus:outline-none focus:ring-2 focus:ring-[#B8A9D4]
-                                    resize-none
-                                  "
-                                  rows={3}
-                                  placeholder="Foundation description"
-                                  value={foundation.description}
-                                  onChange={(e) => handleUpdateFoundation(foundation.id, 'description', e.target.value)}
                                 />
                               </div>
 
@@ -486,6 +684,8 @@ const AddParadigmModal: React.FC<AddParadigmModalProps> = ({ isOpen, onClose, on
       )}
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default AddParadigmModal;

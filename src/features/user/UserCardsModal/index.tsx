@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Quote, CreateQuoteData } from '../../../types';
 import { getUserQuotes, deleteQuote, updateQuote, getInitialQuotes } from '../../../services/firebase/api';
@@ -101,11 +102,39 @@ const UserCardsModal: React.FC<UserCardsModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  // 禁用背景滾動
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+
+      // 滾動到頂部並固定 body
+      window.scrollTo(0, 0);
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = '0';
+      document.body.style.left = '0';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+
+      return () => {
+        // 恢復滾動
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
+        window.scrollTo(scrollX, scrollY);
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  return (
+  const modalContent = (
     <AnimatePresence>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999]">
         <motion.div
           className="bg-background-card rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -243,6 +272,8 @@ const UserCardsModal: React.FC<UserCardsModalProps> = ({ isOpen, onClose }) => {
       </div>
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default UserCardsModal;

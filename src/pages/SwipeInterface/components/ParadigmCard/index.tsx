@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Quote, Foundation } from '../../../../types';
 
 interface ParadigmCardProps {
@@ -15,22 +15,9 @@ const ParadigmCard: React.FC<ParadigmCardProps> = ({
   onDeleteClick,
   canEdit = false
 }) => {
-  const [expandedFoundations, setExpandedFoundations] = useState<Set<string>>(new Set());
   const [showButtons, setShowButtons] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const [isLongPressing, setIsLongPressing] = useState(false);
-
-  const toggleFoundation = (id: string) => {
-    setExpandedFoundations(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
 
   const handleMouseEnter = () => {
     if (canEdit) {
@@ -80,7 +67,7 @@ const ParadigmCard: React.FC<ParadigmCardProps> = ({
 
   return (
     <div
-      className="w-full max-w-sm mx-auto relative"
+      className="w-full max-w-sm md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto relative"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
@@ -90,8 +77,8 @@ const ParadigmCard: React.FC<ParadigmCardProps> = ({
       <motion.div
         className="
           w-full bg-theme-cardBg rounded-2xl shadow-lg
-          border border-theme-cardBorder p-8
-          min-h-[500px] flex flex-col
+          border border-theme-cardBorder p-6
+          min-h-[480px] flex flex-col
         "
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -100,9 +87,9 @@ const ParadigmCard: React.FC<ParadigmCardProps> = ({
       >
 
       {/* Theory Name */}
-      <div className="mb-6">
+      <div className="mb-4">
         <motion.h2
-          className="text-2xl font-bold text-gray-800 text-center"
+          className="text-2xl font-bold text-gray-800 text-center break-words"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -111,14 +98,22 @@ const ParadigmCard: React.FC<ParadigmCardProps> = ({
         </motion.h2>
       </div>
 
+      {/* Theory Description */}
+      {foundations.length > 0 && foundations[0].description && (
+        <div className="mb-6">
+          <p className="text-sm text-gray-600 text-center leading-relaxed px-2">
+            {foundations[0].description}
+          </p>
+        </div>
+      )}
+
       {/* Divider */}
       <div className="w-full h-px bg-gray-300 mb-6"></div>
 
       {/* Foundations List */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4">
+      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
         {foundations.length > 0 ? (
           foundations.map((foundation: Foundation, index: number) => {
-            const isExpanded = expandedFoundations.has(foundation.id);
             const hasExamples = foundation.examples && foundation.examples.length > 0;
 
             return (
@@ -129,66 +124,34 @@ const ParadigmCard: React.FC<ParadigmCardProps> = ({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 * (index + 1) }}
               >
-                {/* Foundation Header */}
-                <div>
-                  {/* Title */}
-                  <h3 className="font-semibold text-gray-800 mb-1">
-                    {foundation.title}
-                  </h3>
+                {/* Foundation Title */}
+                <h3 className="font-semibold text-gray-800 mb-4 flex items-baseline gap-2">
+                  <span className="text-[#B8A9D4] font-bold text-lg">{index + 1}.</span>
+                  <span className="flex-1">{foundation.title}</span>
+                </h3>
 
-                  {/* Description */}
-                  <p className="text-sm text-gray-600 mb-3">
-                    {foundation.description}
-                  </p>
-
-                    {/* Examples Toggle Button */}
-                    {hasExamples && (
-                      <motion.button
-                        className="
-                          px-3 py-1.5 bg-[#B8A9D4] text-white text-xs rounded-lg
-                          font-medium hover:bg-[#A697C3] transition-colors
-                          flex items-center gap-2
-                        "
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => toggleFoundation(foundation.id)}
-                      >
-                        <span>{isExpanded ? '▼' : '▶'}</span>
-                        <span>{isExpanded ? 'Hide Examples' : 'View Examples'}</span>
-                      </motion.button>
-                    )}
-
-                  {/* Examples - Collapsible */}
-                  <AnimatePresence>
-                    {isExpanded && hasExamples && (
+                {/* Examples List */}
+                {hasExamples && (
+                  <div className="space-y-2 pl-6">
+                    {foundation.examples.map((example: string, exIndex: number) => (
                       <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-3 space-y-2 overflow-hidden"
+                        key={exIndex}
+                        className="
+                          bg-white/80 rounded-lg p-3 text-sm text-gray-700
+                          border border-[#B8A9D4]/20
+                        "
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 * exIndex }}
                       >
-                        {foundation.examples.map((example: string, exIndex: number) => (
-                          <motion.div
-                            key={exIndex}
-                            className="
-                              bg-white/80 rounded-lg p-3 text-sm text-gray-700
-                              border border-[#B8A9D4]/20
-                            "
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.05 * exIndex }}
-                          >
-                            <span className="font-medium text-[#B8A9D4]">
-                              Example {exIndex + 1}:
-                            </span>{' '}
-                            {example}
-                          </motion.div>
-                        ))}
+                        <span className="font-medium text-[#B8A9D4]">
+                          {index + 1}-{exIndex + 1}.
+                        </span>{' '}
+                        {example}
                       </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             );
           })
@@ -199,12 +162,24 @@ const ParadigmCard: React.FC<ParadigmCardProps> = ({
         )}
       </div>
 
-      {/* User Info */}
-      {quote.userId && quote.userId !== 'system' && (
-        <div className="mt-4 pt-4 border-t border-gray-300">
-          <p className="text-xs text-gray-500 text-center">
-            {quote.isPublic ? 'Public' : 'Private'} Paradigm
-          </p>
+      {/* Tags Display */}
+      {quote.moods && quote.moods.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2 justify-center">
+          {quote.moods.map((tag, index) => (
+            <motion.div
+              key={index}
+              className="
+                px-3 py-1 text-xs rounded-full
+                font-medium shadow-sm
+                bg-[#B8A9D4] text-white
+              "
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.05 * index }}
+            >
+              {tag}
+            </motion.div>
+          ))}
         </div>
       )}
 

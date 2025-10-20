@@ -123,6 +123,13 @@ export const updateQuote = async (
     if (updatedData.author !== undefined) updateData.author = updatedData.author;
     if (updatedData.moods !== undefined) updateData.moods = updatedData.moods;
     if (updatedData.isPublic !== undefined) updateData.isPublic = updatedData.isPublic;
+    if (updatedData.type !== undefined) updateData.type = updatedData.type;
+
+    // Add paradigm-specific fields if type is paradigm
+    if (updatedData.type === 'paradigm') {
+      if (updatedData.theory !== undefined) updateData.theory = updatedData.theory;
+      if (updatedData.foundations !== undefined) updateData.foundations = updatedData.foundations;
+    }
 
     await updateDoc(quoteRef, updateData);
 

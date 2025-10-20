@@ -376,6 +376,28 @@ const config = {
 
 ## Deployment Process
 
+### Firebase Hosting Deployment (CRITICAL)
+
+**IMPORTANT:** Firebase Hosting must be deployed BEFORE testing Google Authentication, even in development!
+
+```bash
+# Initial setup (only once)
+firebase init hosting
+# - Public directory: dist
+# - Single-page app: Yes
+# - Automatic builds: No
+
+# Deploy process
+npm run build
+firebase deploy --only hosting
+```
+
+**Why This Is Critical:**
+- Google OAuth popup uses `https://your-project.firebaseapp.com/__/auth/handler`
+- This endpoint only exists after Firebase Hosting deployment
+- Without deployment, login will show your app page instead of Google login
+- See `docs/TROUBLESHOOTING.md` for details
+
 ### Build Process
 
 ```bash
@@ -393,6 +415,9 @@ npm run build
 
 # 5. Test built application
 npm run preview
+
+# 6. Deploy to Firebase Hosting (MANDATORY for auth)
+firebase deploy --only hosting
 ```
 
 ### Pre-deployment Checklist
@@ -403,6 +428,7 @@ npm run preview
 - [ ] Documentation updated
 - [ ] CHANGELOG.md updated
 - [ ] Environment variables configured
+- [ ] **Firebase Hosting deployed** (critical for authentication)
 
 ---
 
@@ -459,3 +485,43 @@ export const getInitialQuotes = async (): Promise<Quote[]> => {
 - **Monthly:** Audit bundle size and performance
 - **Quarterly:** Review and update documentation
 - **As needed:** Security updates and patches
+
+---
+
+## Critical Lessons Learned
+
+### Lesson #1: Firebase Hosting is Required for Google Auth (2025-10-20)
+
+**What Happened:**
+Google Authentication completely failed because Firebase Hosting was never deployed. The OAuth popup showed the application's home page instead of Google's login screen.
+
+**Root Cause:**
+- Firebase Auth uses `/__/auth/handler` endpoint for OAuth flow
+- This endpoint only works after Firebase Hosting deployment
+- Without deployment, the app's rewrite rules redirect ALL requests to `index.html`
+- This breaks the OAuth flow completely
+
+**Prevention:**
+1. **Always deploy Hosting FIRST** before testing authentication
+2. Check `FIREBASE_SETUP.md` Step 7 (marked as CRITICAL)
+3. Verify auth handler URL returns Firebase page, not your app:
+   ```bash
+   curl -I https://your-project.firebaseapp.com/__/auth/handler
+   ```
+
+**Documentation Updates:**
+- `FIREBASE_SETUP.md` - Added Step 7 with CRITICAL warning
+- `docs/TROUBLESHOOTING.md` - Added detailed diagnosis guide
+- `docs/development-process.md` - Added Firebase Hosting to deployment checklist
+
+**Key Takeaway:**
+Firebase Hosting deployment is NOT optional - it's a **prerequisite** for Google Authentication to work, even in local development.
+
+---
+
+## Troubleshooting
+
+For detailed troubleshooting guides, see:
+- `docs/TROUBLESHOOTING.md` - Comprehensive problem diagnosis and solutions
+- `FIREBASE_SETUP.md` - Setup and configuration issues
+- Project README - Quick reference

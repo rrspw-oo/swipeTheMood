@@ -66,9 +66,10 @@ export interface UserProfile {
 ```typescript
 export const signInWithGoogle = async (): Promise<UserProfile | null>
 ```
-- Opens Google Sign-In popup
+- Opens Google Sign-In popup (falls back to redirect when popups are blocked)
+- Stores the current path before redirect so the app can restore navigation
 - Creates or updates user profile in Firestore
-- Returns UserProfile on success
+- Returns UserProfile on success, or `null` when redirect flow is triggered
 - Throws error on failure
 
 **signOutUser()**
@@ -87,6 +88,22 @@ export const onAuthStateChange = (
 - Listens to authentication state changes
 - Calls callback with current user or null
 - Returns unsubscribe function
+
+**getGoogleRedirectResult()**
+```typescript
+export const getGoogleRedirectResult = async (): Promise<UserProfile | null>
+```
+- Checks for a Google redirect sign-in result on app load
+- Creates or updates the user profile when a redirect result exists
+- Returns the resulting UserProfile, or `null` when no redirect occurred
+
+**consumeRedirectPath()**
+```typescript
+export const consumeRedirectPath = (): string | null
+```
+- Restores the relative path that was saved before starting a redirect sign-in
+- Only returns same-origin paths for safety
+- Clears the stored value after reading
 
 **createOrUpdateUserProfile()**
 ```typescript

@@ -67,7 +67,49 @@ VITE_FIREBASE_APP_ID=your_app_id
 5. Use the provided `firestore.rules` file
 6. Deploy rules: `firebase deploy --only firestore:rules`
 
-## Step 7: Test the Setup
+## Step 7: Deploy Firebase Hosting (CRITICAL FOR GOOGLE AUTH)
+
+**WARNING: Google Authentication WILL NOT WORK without Firebase Hosting deployment!**
+
+Firebase Authentication relies on the `/__/auth/handler` endpoint which is only available after deploying to Firebase Hosting.
+
+### Initial Deployment
+
+1. Initialize Firebase Hosting (if not done):
+   ```bash
+   firebase init hosting
+   ```
+   - Select "Use an existing project"
+   - Choose your Firebase project
+   - Set public directory: `dist`
+   - Configure as single-page app: Yes
+   - Set up automatic builds: No
+
+2. Build the application:
+   ```bash
+   npm run build
+   ```
+
+3. Deploy to Firebase Hosting:
+   ```bash
+   firebase deploy --only hosting
+   ```
+
+4. Verify deployment:
+   - Visit your Hosting URL: `https://your-project.web.app`
+   - Check that `https://your-project.firebaseapp.com/__/auth/handler` is accessible
+
+### Why This Is Critical
+
+The Google OAuth popup opens `https://your-project.firebaseapp.com/__/auth/handler` to handle authentication. If Hosting is not deployed:
+
+- The popup will show your app's default page instead of Google login
+- Users will see `auth/popup-closed-by-user` errors
+- Login will completely fail in development (localhost)
+
+**This must be done BEFORE testing Google Authentication, even in development!**
+
+## Step 8: Test the Setup
 
 1. Start the development server: `npm run dev`
 2. Open http://localhost:4000
@@ -87,9 +129,37 @@ The included `firestore.rules` provide:
 
 ## Troubleshooting
 
+### Google Login Shows App Page Instead of Login Screen
+
+**Symptom:** Clicking login opens a popup that shows your app's home page instead of Google's login page.
+
+**Cause:** Firebase Hosting not deployed.
+
+**Solution:**
+```bash
+npm run build
+firebase deploy --only hosting
+```
+
+**Verification:**
+1. Open browser console and run:
+   ```javascript
+   console.log('Auth Handler:', 'https://YOUR-PROJECT.firebaseapp.com/__/auth/handler');
+   ```
+2. Visit that URL - it should NOT show your app, but a Firebase auth page
+
+### auth/popup-closed-by-user Error
+
+**Symptom:** Login popup immediately closes with error `auth/popup-closed-by-user`.
+
+**Cause:** The auth handler URL is redirecting to your app instead of Google OAuth.
+
+**Solution:** Same as above - deploy Firebase Hosting.
+
 ### Authentication Issues
 - Make sure Google sign-in is enabled in Firebase Console
 - Check that your domain is authorized in Firebase Auth settings
+- Verify `localhost` is in the authorized domains list
 
 ### Firestore Permission Denied
 - Verify security rules are deployed correctly

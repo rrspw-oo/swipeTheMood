@@ -1,5 +1,185 @@
 # Change Log
 
+## 2025/10/20 - CRITICAL FIX: Google 登入功能修復
+
+### 問題診斷與修復
+**嚴重問題：** Google 登入完全失效，popup 視窗顯示應用頁面而非 Google 登入畫面
+
+**根本原因：**
+- Firebase Hosting 從未部署
+- Firebase Auth 依賴 `/__/auth/handler` 端點處理 OAuth 流程
+- 該端點只有在部署 Firebase Hosting 後才會正常運作
+- 未部署時，所有請求（包括 auth handler）都被 rewrite 規則重定向到 `index.html`
+
+**解決方案：**
+```bash
+npm run build
+firebase deploy --only hosting
+```
+
+### 程式碼變更
+- 恢復 `src/services/firebase/auth.ts` 到原始簡單版本
+- 移除所有 redirect flow 相關程式碼
+- 清理 `src/contexts/AuthContext.tsx` 的 redirect 處理邏輯
+- 移除未使用的 import (`useRef`)
+
+### 文檔更新
+**新增文檔：**
+- `docs/TROUBLESHOOTING.md` - 完整的故障排除指南
+  - Google 登入問題診斷
+  - Firestore 連接問題
+  - 環境變數問題
+  - 歷史事件記錄
+
+**更新文檔：**
+- `FIREBASE_SETUP.md`
+  - 新增 Step 7: Deploy Firebase Hosting (標註為 CRITICAL)
+  - 詳細說明為何 Hosting 部署是必要的
+  - 新增驗證步驟
+  - 更新 Troubleshooting 區塊
+
+- `docs/development-process.md`
+  - 新增 "Firebase Hosting Deployment (CRITICAL)" 區塊
+  - 更新部署流程 checklist
+  - 新增 "Critical Lessons Learned" 章節
+  - 記錄本次事件的完整時間線和教訓
+
+### 部署資訊
+- 成功部署至 Firebase Hosting: https://quote-swipe.web.app
+- Firebase 專案：quote-swipe
+- 建構時間：4.98s
+- Bundle 大小：936.19 KiB
+
+### 預防措施
+1. Firebase Hosting 部署現已標註為 CRITICAL 步驟
+2. 在所有相關文檔中明確說明其必要性
+3. 建立完整的故障排除文檔避免類似問題
+4. 記錄事件時間線供未來參考
+
+### 教訓
+**關鍵發現：** Firebase Hosting 不是可選功能，而是 Google Authentication 的**前置條件**，即使在本地開發環境也必須先部署才能測試登入功能。
+
+---
+
+## 2025/10/13 - Paradigm 卡片 Layout 統一與 UI 改進
+
+### ParadigmCard Layout 統一
+- "Private/Public Paradigm" 改用 tag 樣式顯示（與 Vitality cards 一致）
+- 移除原本的灰色文字樣式，改用紫色圓角標籤
+- 使用 `bg-[#B8A9D4]` 紫色背景 + 白色文字
+- 置中顯示，移除上方邊框線
+
+### 視覺一致性提升
+- Paradigm 卡片底部 layout 與 Vitality 完全一致
+- 統一使用紫色主題標籤樣式
+- 更清晰的視覺層級和資訊呈現
+
+### 部署資訊
+- 成功建構生產版本
+- 部署至 Firebase Hosting: https://quote-swipe.web.app
+- Firebase 專案：quote-swipe (wpsrrr@gmail.com)
+- 建構時間：4.33s
+- Bundle 大小：915.50 KiB
+
+---
+
+## 2025/10/13 - Paradigm 新增 Description 與 Tags 系統
+
+### AddParadigmModal 結構調整
+- Description textarea 從 Foundation 內移至 Theory Name 下方
+- Description 作為整體理論描述，顯示在卡片的 Theory 標題下方
+- 說明文字：「This will appear below the theory name on the card」
+
+### Tags 系統實作
+- 新增完整的 Tags 輸入功能（類似 Quote/Vitality 模式）
+- Tag 輸入框：輸入後按 Enter 新增到自訂 tags
+- Quick select：顯示所有已使用的 tags，點擊切換選中狀態
+- 選中狀態視覺化：Quick select 的 tag 被選中後顯示紫色背景（bg-[#B8A9D4]）
+- 未選中狀態：灰色背景（bg-background-card）+ hover 效果
+
+### 重要 UI 邏輯改進
+- Quick select 中被選中的 tag 直接在該區域顯示選中狀態
+- 下方只顯示「手動輸入」的 tags（customTags），不重複顯示 Quick select 的 tags
+- 避免標籤重複出現，提升視覺清晰度
+- 響應式顯示：手機 5 個 / 平板 7 個 / 桌面 11 個
+
+### ParadigmCard 顯示優化
+- Theory 標題下方顯示 Tags（如果有）
+- Tags 使用紫色主題（bg-[#B8A9D4]）
+- Tags 下方顯示 Description（整體理論描述）
+- 視覺層級：Theory 標題 → Tags → Description → 分隔線 → Foundations
+
+### 資料結構更新
+- `CreateParadigmData` 新增 `description?: string` 欄位
+- `CreateParadigmData` 新增 `moods: string[]` 欄位儲存 tags
+- 提交時合併 selectedTags 和 customTags 到 moods 陣列
+- 第一個 foundation 的 description 自動使用整體 description
+
+### 編輯模式支援
+- 編輯時自動分離 Quick select tags 和 custom tags
+- Quick select tags 顯示選中狀態
+- 正確載入並顯示整體 description
+
+### 技術實作細節
+- 修改 `types/index.ts` 更新 CreateParadigmData interface
+- 修改 `AddParadigmModal/index.tsx` 新增完整 tags 系統
+- 修改 `ParadigmCard/index.tsx` 顯示 tags 和 description
+- 修改 `SwipeInterface/index.tsx` 處理 moods 欄位
+- 使用 trackTagUsage 追蹤 tag 使用頻率
+
+### 部署資訊
+- 成功建構生產版本
+- 部署至 Firebase Hosting: https://quote-swipe.web.app
+- Firebase 專案：quote-swipe (wpsrrr@gmail.com)
+- 建構時間：4.61s
+- Bundle 大小：915.40 KiB
+- 21 個檔案成功上傳
+
+---
+
+## 2025/10/13 - Paradigm 卡片結構優化與顯示邏輯改進
+
+### Paradigm 卡片結構重新設計
+- Theory 標題超過容器寬度時自動換行（break-words）
+- Theory 下方顯示整體描述（使用第一個 foundation 的 description）
+- Foundation 卡片收起時只顯示「View Examples」按鈕
+- 展開後顯示 foundation 標題 + 範例列表
+- 移除 foundation description 在卡片中的顯示（改為整體描述）
+
+### 範例顯示格式優化
+- 範例編號改為純數字格式：「1.」、「2.」、「3.」
+- 移除「Example」文字前綴，更簡潔直觀
+- 保持紫色數字高亮顯示（text-[#B8A9D4]）
+
+### 視覺層級優化
+- 理論名稱（H2）→ 理論描述（P）→ 分隔線 → Foundations
+- Foundation 卡片預設收起，點擊展開查看詳細內容
+- 展開動畫流暢，包含標題和範例的漸入效果
+- 統一使用紫色主題（#B8A9D4）
+
+### 使用流程改進
+- **瀏覽模式**：查看理論名稱和整體描述
+- **深入模式**：點擊 View Examples 展開查看具體基礎和範例
+- 支援多個 foundations，每個可獨立展開/收起
+- 更符合資訊層級的閱讀體驗
+
+### 技術實作細節
+- 修改 `ParadigmCard/index.tsx` 卡片結構
+- 使用 `foundations[0].description` 作為整體描述
+- Foundation title 和 examples 包裹在同一個 collapsible 區域
+- 範例編號使用 `{exIndex + 1}.` 格式
+- 保持 AnimatePresence 動畫效果
+
+### 部署資訊
+- 成功建構生產版本
+- 部署至 Firebase Hosting: https://quote-swipe.web.app
+- Firebase 專案：quote-swipe (wpsrrr@gmail.com)
+- 建構時間：4.42s
+- Bundle 大小：911.29 KiB
+- 21 個檔案成功上傳
+
+---
+
 ## 2025/10/13 - Paradigm 卡片樣式統一與編輯功能完善
 
 ### Paradigm 卡片視覺統一

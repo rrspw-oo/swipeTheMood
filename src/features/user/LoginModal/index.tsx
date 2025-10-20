@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../contexts/AuthContext';
 
@@ -14,10 +15,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const handleGoogleSignIn = async () => {
     try {
       setError(null);
-      await signInWithGoogle();
-      onClose();
+      const profile = await signInWithGoogle();
+      if (profile) {
+        onClose();
+      }
     } catch (error: any) {
-      setError(error.message || 'Failed to sign in');
+      console.error('[LoginModal] Sign in error:', error);
+      setError(error.message || 'Failed to sign in. Please try again.');
     }
   };
 
@@ -28,13 +32,41 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  return (
+  // 禁用背景滾動
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+
+      // 滾動到頂部並固定 body
+      window.scrollTo(0, 0);
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = '0';
+      document.body.style.left = '0';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+
+      return () => {
+        // 恢復滾動
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
+        window.scrollTo(scrollX, scrollY);
+      };
+    }
+  }, [isOpen]);
+
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black bg-opacity-50 z-[9999]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -45,7 +77,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           <motion.div
             className="
               fixed bottom-0 left-0 right-0 bg-background-primary rounded-t-3xl
-              shadow-2xl z-50 max-h-[90vh] overflow-y-auto custom-scrollbar
+              shadow-2xl z-[10000] max-h-[90vh] overflow-y-auto custom-scrollbar
             "
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -167,6 +199,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       )}
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default LoginModal;

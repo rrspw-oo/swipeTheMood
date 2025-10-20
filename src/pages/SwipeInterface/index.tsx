@@ -16,6 +16,21 @@ const AddParadigmModal = lazy(() => import('../../features/user/AddParadigmModal
 const LoginModal = lazy(() => import('../../features/user/LoginModal'));
 const UserProfile = lazy(() => import('../../features/user/UserProfile'));
 
+/**
+ * Filter quotes by type
+ * @param quotes - Array of quotes to filter
+ * @param targetType - Target type to filter by ('quote', 'vitality', or 'paradigm')
+ * @returns Filtered array of quotes
+ */
+const filterQuotesByType = (quotes: Quote[], targetType: 'quote' | 'vitality' | 'paradigm'): Quote[] => {
+  if (targetType === 'quote') {
+    // For 'quote' type, include quotes with type='quote' or undefined (legacy quotes)
+    return quotes.filter(q => q.type === 'quote' || q.type === undefined);
+  }
+  // For 'vitality' and 'paradigm', filter exact matches
+  return quotes.filter(q => q.type === targetType);
+};
+
 const SwipeInterface: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -90,9 +105,12 @@ const SwipeInterface: React.FC = () => {
       // Filter quotes based on current active tab
       let filteredQuotes = shuffledQuotes;
       if (activeTab === 'vitality') {
-        filteredQuotes = shuffledQuotes.filter(q => q.type === 'vitality');
+        filteredQuotes = filterQuotesByType(shuffledQuotes, 'vitality');
       } else if (activeTab === 'paradigm') {
-        filteredQuotes = shuffledQuotes.filter(q => q.type === 'paradigm');
+        filteredQuotes = filterQuotesByType(shuffledQuotes, 'paradigm');
+      } else if (activeTab === 'random' || activeTab === 'mood' || activeTab === 'author') {
+        // For default mode tabs (random, mood, author), only show 'quote' type
+        filteredQuotes = filterQuotesByType(shuffledQuotes, 'quote');
       }
 
       setQuotes(filteredQuotes);
@@ -111,8 +129,10 @@ const SwipeInterface: React.FC = () => {
     setIsLoading(true);
     try {
       const data = await getQuotesByMood(mood, user?.uid);
+      // Filter to only show 'quote' type (mood tab is only in default mode)
+      const filteredData = filterQuotesByType(data, 'quote');
       // Shuffle mood quotes for random order
-      const shuffledQuotes = shuffleArray(data);
+      const shuffledQuotes = shuffleArray(filteredData);
       setQuotes(shuffledQuotes);
       setCurrentIndex(0);
       setHistory([]);
@@ -134,7 +154,9 @@ const SwipeInterface: React.FC = () => {
 
       // Use cached random quotes if available, no loading screen
       if (randomQuotesCache.length > 0) {
-        setQuotes(randomQuotesCache);
+        // Filter to only show 'quote' type
+        const filteredQuotes = filterQuotesByType(randomQuotesCache, 'quote');
+        setQuotes(filteredQuotes);
         setCurrentIndex(0);
         setHistory([]);
       } else {
@@ -150,7 +172,7 @@ const SwipeInterface: React.FC = () => {
 
       // Always filter from the latest cache
       if (randomQuotesCache.length > 0) {
-        const filteredQuotes = randomQuotesCache.filter(q => q.type === targetType);
+        const filteredQuotes = filterQuotesByType(randomQuotesCache, targetType);
         setQuotes(filteredQuotes);
         setCurrentIndex(0);
         setHistory([]);
@@ -173,8 +195,10 @@ const SwipeInterface: React.FC = () => {
       setFilterState({ type: 'author', value: author });
       setActiveTab('author');
       const authorQuotes = await getQuotesByAuthor(author, user?.uid);
+      // Filter to only show 'quote' type (author tab is only in default mode)
+      const filteredQuotes = filterQuotesByType(authorQuotes, 'quote');
       // Shuffle author quotes for random order
-      const shuffledQuotes = shuffleArray(authorQuotes);
+      const shuffledQuotes = shuffleArray(filteredQuotes);
       setQuotes(shuffledQuotes);
       setCurrentIndex(0);
       setHistory([]);
@@ -191,8 +215,10 @@ const SwipeInterface: React.FC = () => {
     setActiveTab('mood');
     try {
       const moodQuotes = await getQuotesByMood(mood, user?.uid);
+      // Filter to only show 'quote' type (mood tab is only in default mode)
+      const filteredQuotes = filterQuotesByType(moodQuotes, 'quote');
       // Shuffle mood quotes for random order
-      const shuffledQuotes = shuffleArray(moodQuotes);
+      const shuffledQuotes = shuffleArray(filteredQuotes);
       setQuotes(shuffledQuotes);
       setCurrentIndex(0);
       setHistory([]);
@@ -208,7 +234,9 @@ const SwipeInterface: React.FC = () => {
 
     // Use cached random quotes if available, no loading screen
     if (randomQuotesCache.length > 0) {
-      setQuotes(randomQuotesCache);
+      // Filter to only show 'quote' type
+      const filteredQuotes = filterQuotesByType(randomQuotesCache, 'quote');
+      setQuotes(filteredQuotes);
       setCurrentIndex(0);
       setHistory([]);
     } else {
@@ -346,7 +374,7 @@ const SwipeInterface: React.FC = () => {
         const updatePayload = {
           text: paradigmData.theory,
           author: '',
-          moods: [],
+          moods: paradigmData.moods || [],
           isPublic: paradigmData.isPublic,
           type: 'paradigm' as const,
           theory: paradigmData.theory,
@@ -380,7 +408,7 @@ const SwipeInterface: React.FC = () => {
         const newQuote = await addQuote({
           text: paradigmData.theory,
           author: '',
-          moods: [],
+          moods: paradigmData.moods || [],
           userId: user.uid,
           isPublic: paradigmData.isPublic || false,
           type: 'paradigm',
@@ -509,7 +537,7 @@ const SwipeInterface: React.FC = () => {
 
       // Filter vitality quotes immediately
       if (randomQuotesCache.length > 0) {
-        const vitalityQuotes = randomQuotesCache.filter(q => q.type === 'vitality');
+        const vitalityQuotes = filterQuotesByType(randomQuotesCache, 'vitality');
         setQuotes(vitalityQuotes);
         setCurrentIndex(0);
         setHistory([]);
@@ -527,7 +555,9 @@ const SwipeInterface: React.FC = () => {
 
       // Use cached random quotes if available
       if (randomQuotesCache.length > 0) {
-        setQuotes(randomQuotesCache);
+        // Filter to only show 'quote' type
+        const filteredQuotes = filterQuotesByType(randomQuotesCache, 'quote');
+        setQuotes(filteredQuotes);
         setCurrentIndex(0);
         setHistory([]);
       } else {
@@ -604,7 +634,11 @@ const SwipeInterface: React.FC = () => {
           <MoodGrid onSelectMood={handleMoodSelect} />
         ) : currentQuote ? (
           <motion.div
-            className="w-full max-w-sm swipe-container"
+            className={`w-full swipe-container ${
+              currentQuote.type === 'paradigm'
+                ? 'max-w-sm md:max-w-5xl lg:max-w-6xl xl:max-w-7xl'
+                : 'max-w-sm'
+            }`}
             drag="x"
             dragDirectionLock={true}
             onDrag={handleDrag}

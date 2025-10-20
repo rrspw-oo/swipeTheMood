@@ -1,10 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { AuthState, User } from '../types';
-import { onAuthStateChange, signInWithGoogle, signOutUser, UserProfile, createOrUpdateUserProfile } from '../services/firebase/auth';
+import {
+  onAuthStateChange,
+  signInWithGoogle,
+  signOutUser,
+  UserProfile,
+  createOrUpdateUserProfile
+} from '../services/firebase/auth';
 
 interface AuthContextType extends AuthState {
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<UserProfile | null>;
   signOut: () => Promise<void>;
   userProfile: UserProfile | null;
 }
@@ -32,9 +38,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const unsubscribe = onAuthStateChange(async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        // Convert Firebase user to our User interface
         const user: User = {
           uid: firebaseUser.uid,
           email: firebaseUser.email || '',
@@ -42,8 +49,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           photoURL: firebaseUser.photoURL || undefined
         };
 
-        // Get or create user profile
         const profile = await createOrUpdateUserProfile(firebaseUser);
+
+        if (!isMounted) return;
 
         setAuthState({
           user,
@@ -52,6 +60,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
         setUserProfile(profile);
       } else {
+        if (!isMounted) return;
+
         setAuthState({
           user: null,
           isLoading: false,
@@ -61,16 +71,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
-  const handleSignInWithGoogle = async () => {
+  const handleSignInWithGoogle = async (): Promise<UserProfile | null> => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
-      await signInWithGoogle();
-      // State will be updated through onAuthStateChanged
+      const result = await signInWithGoogle();
+      setAuthState(prev => ({ ...prev, isLoading: false }));
+      return result;
     } catch (error) {
-      console.error('Sign in error:', error);
+      console.error('[AuthContext] Sign in error:', error);
       setAuthState(prev => ({ ...prev, isLoading: false }));
       throw error;
     }

@@ -29,6 +29,8 @@ export interface CreateQuoteData {
 
 export interface CreateParadigmData {
   theory: string;
+  description?: string;
+  moods: string[];
   foundations: Foundation[];
   isPublic?: boolean;
   type: 'paradigm';

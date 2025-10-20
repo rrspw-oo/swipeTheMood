@@ -628,7 +628,7 @@ const SwipeInterface: React.FC = () => {
       <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} viewMode={viewMode} />
 
       {/* Main Content */}
-      <div className="flex-1 px-6 py-8 flex items-center justify-center">
+      <div className="flex-1 px-6 py-8 flex items-start justify-center overflow-y-auto">
         {activeTab === 'mood' && !currentMood ? (
           // Show mood grid when in mood tab but no mood selected
           <MoodGrid onSelectMood={handleMoodSelect} />

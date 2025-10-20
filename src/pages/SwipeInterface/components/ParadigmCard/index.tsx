@@ -77,8 +77,8 @@ const ParadigmCard: React.FC<ParadigmCardProps> = ({
       <motion.div
         className="
           w-full bg-theme-cardBg rounded-2xl shadow-lg
-          border border-theme-cardBorder p-6
-          min-h-[480px] flex flex-col
+          border border-theme-cardBorder p-4 md:p-6
+          min-h-[60vh] max-h-[75vh] flex flex-col
         "
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -111,7 +111,7 @@ const ParadigmCard: React.FC<ParadigmCardProps> = ({
       <div className="w-full h-px bg-gray-300 mb-6"></div>
 
       {/* Foundations List */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
+      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 md:space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3 pb-2">
         {foundations.length > 0 ? (
           foundations.map((foundation: Foundation, index: number) => {
             const hasExamples = foundation.examples && foundation.examples.length > 0;
@@ -126,8 +126,8 @@ const ParadigmCard: React.FC<ParadigmCardProps> = ({
               >
                 {/* Foundation Title */}
                 <h3 className="font-semibold text-gray-800 mb-4 flex items-baseline gap-2">
-                  <span className="text-[#B8A9D4] font-bold text-lg">{index + 1}.</span>
-                  <span className="flex-1">{foundation.title}</span>
+                  <span className="text-[#B8A9D4] font-bold text-lg shrink-0">{index + 1}.</span>
+                  <span className="flex-1 break-words">{foundation.title}</span>
                 </h3>
 
                 {/* Examples List */}
@@ -138,16 +138,16 @@ const ParadigmCard: React.FC<ParadigmCardProps> = ({
                         key={exIndex}
                         className="
                           bg-white/80 rounded-lg p-3 text-sm text-gray-700
-                          border border-[#B8A9D4]/20
+                          border border-[#B8A9D4]/20 break-words
                         "
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.05 * exIndex }}
                       >
-                        <span className="font-medium text-[#B8A9D4]">
+                        <span className="font-medium text-[#B8A9D4] inline-block shrink-0">
                           {index + 1}-{exIndex + 1}.
                         </span>{' '}
-                        {example}
+                        <span className="inline">{example}</span>
                       </motion.div>
                     ))}
                   </div>
